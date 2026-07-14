@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GodGuru Kennel Colour Scanner</title>
+<style>
+:root{--bg:#0b1018;--panel:#141c28;--panel2:#1a2534;--text:#eef4ff;--muted:#9fb0c6;--accent:#58d6c7;--danger:#ff8d8d;--border:#2a3a50}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:linear-gradient(135deg,#081019,#111927);color:var(--text)}
+main{max-width:1180px;margin:auto;padding:20px}.hero{margin-bottom:18px}.hero h1{margin:0;font-size:clamp(28px,5vw,46px)}.hero p{color:var(--muted);max-width:850px;line-height:1.5}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,.8fr);gap:18px}@media(max-width:850px){.grid{grid-template-columns:1fr}}
+.card{background:rgba(20,28,40,.96);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 12px 40px #0005}.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+button,.filebtn{border:1px solid var(--border);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:10px;font-weight:650;cursor:pointer}button:hover,.filebtn:hover{border-color:var(--accent)}input[type=file]{display:none}.primary{background:var(--accent);color:#06221f;border-color:transparent}.danger{color:#ffd3d3}
+.canvasWrap{position:relative;background:#06090e;border-radius:12px;overflow:hidden;min-height:320px;display:grid;place-items:center;border:1px solid var(--border)}canvas{display:block;max-width:100%;height:auto;cursor:crosshair}.empty{position:absolute;text-align:center;color:var(--muted);padding:24px;pointer-events:none}.zoom{position:absolute;right:12px;bottom:12px;background:#0c111bdd;border:1px solid var(--border);padding:7px 10px;border-radius:8px;font-size:12px;color:var(--muted)}
+.slot{border:1px solid var(--border);background:#101824;border-radius:12px;padding:12px;margin-bottom:10px}.slot.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}.slothead{display:flex;justify-content:space-between;align-items:center;gap:8px}.slot h3{margin:0;font-size:16px}.sample{width:42px;height:42px;border-radius:10px;border:1px solid #ffffff33;background:#333}.result{margin-top:9px;display:grid;grid-template-columns:46px 1fr;gap:10px;align-items:center}.result strong{display:block}.meta{font-size:12px;color:var(--muted)}.confidence{font-size:13px;margin-top:6px}.good{color:#7ff3b7}.warn{color:#ffd37f}.bad{color:var(--danger)}
+.instructions{font-size:14px;color:var(--muted);line-height:1.45}.instructions b{color:var(--text)}.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:7px;margin-top:14px}.chip{display:flex;gap:7px;align-items:center;background:#101824;border:1px solid var(--border);border-radius:8px;padding:7px;font-size:11px}.swatch{width:22px;height:22px;border-radius:6px;border:1px solid #ffffff33;flex:none}
+.rangeRow{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:13px}.rangeRow input{width:140px}.notice{padding:10px 12px;background:#332a16;border:1px solid #765d20;border-radius:10px;color:#ffe4a1;font-size:13px;margin:10px 0}.footer{margin-top:16px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body><main>
+<section class="hero"><h1>GodGuru Kennel Colour Scanner</h1><p>Upload a direct Warframe screenshot, select Primary, Secondary and Tertiary, then click several clean points from each colour area. The scanner rejects glare and shadows, averages the samples, and compares them perceptually against all 24 natural Kubrow colours.</p></section>
+<div class="grid">
+<section class="card">
+<div class="controls"><label class="filebtn primary">Upload screenshot<input id="file" type="file" accept="image/*"></label><button id="undo">Undo point</button><button id="clear">Clear active slot</button><button id="reset" class="danger">Reset all</button></div>
+<div class="rangeRow"><span>Sampling radius</span><input id="radius" type="range" min="1" max="20" value="6"><b id="radiusValue">6 px</b></div>
+<div class="notice">Best results: use a direct screenshot, disable HDR, preview the Metus skin, reset to natural colours, and sample flat areas away from highlights, seams and glowing parts.</div>
+<div class="canvasWrap"><canvas id="canvas"></canvas><div class="empty" id="empty"><b>No screenshot loaded</b><br>Upload a PNG or JPG to begin.</div><div class="zoom">Tap/click to sample • wheel/pinch is handled by your browser</div></div>
+<div class="palette" id="palette"></div>
+</section>
+<aside class="card">
+<div class="instructions"><b>How to use</b><br>1. Tap a slot below.<br>2. Tap 4–10 points on that colour region.<br>3. Repeat for all three slots.<br>4. Trust “confirmed” only when the top match is clearly separated from the runner-up.</div>
+<div id="slots"></div>
+<button id="copy" style="width:100%;margin-top:5px">Copy results</button>
+<div class="footer">GodGuru Kennel Colour Scanner deliberately does not claim certainty when screenshot lighting makes two colours too similar. Reference values are editable in the source and can later be replaced with your own verified in-game calibration captures.</div>
+</aside></div>
+</main>
+<script>
+const colours=[
+['Ash Grey','#808079'],['Earth Brown','#806A5D'],['Corpus Grey','#808080'],['Hek Green','#7E806A'],['Kril Brown','#80745E'],['Gallium Grey','#78828C'],['Grustrag Grey','#807A6C'],['Saturn Brown','#806753'],['Sedna Grey','#807979'],['Derelict Black','#262626'],['Mars Red','#805F44'],['Infested Black','#363333'],['Void Black','#262020'],['Darvo Blue','#697280'],['Ordis Grey','#72727A'],['Mercury Brown','#807461'],['Anyo Grey','#363640'],['Ambulas Black','#342622'],['Shadow Grey','#80736B'],['Sargas Brown','#C58D4D'],['Jupiter Brown','#805A32'],['Phorid Red','#804330'],['Alad Blue','#5B6B80'],['Venus Brown','#4D4146']];
+const slots=['Primary','Secondary','Tertiary']; let active=0, image=null, scale=1; const samples=[[],[],[]];
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true}),empty=document.getElementById('empty');
+function hexRgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function rgbHex(a){return '#'+a.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('').toUpperCase()}
+function lin(v){v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}
+function lab(rgb){let r=lin(rgb[0]),g=lin(rgb[1]),b=lin(rgb[2]);let x=(r*.4124+g*.3576+b*.1805)/.95047,y=(r*.2126+g*.7152+b*.0722),z=(r*.0193+g*.1192+b*.9505)/1.08883;let f=t=>t>.008856?Math.cbrt(t):7.787*t+16/116;return [116*f(y)-16,500*(f(x)-f(y)),200*(f(y)-f(z))]}
+function de(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])}
+const refs=colours.map(c=>({...{name:c[0],hex:c[1]},lab:lab(hexRgb(c[1]))}));
+function median(vals){vals=[...vals].sort((a,b)=>a-b);let m=vals.length>>1;return vals.length%2?vals[m]:(vals[m-1]+vals[m])/2}
+function aggregate(arr){if(!arr.length)return null;return [0,1,2].map(i=>median(arr.map(p=>p.rgb[i])))}
+function rank(rgb){let L=lab(rgb);return refs.map(r=>({...r,d:de(L,r.lab)})).sort((a,b)=>a.d-b.d)}
+function certainty(r){if(!r||r.length<2)return ['',''];let gap=r[1].d-r[0].d, d=r[0].d;if(d<7&&gap>4)return ['Confirmed','good'];if(d<14&&gap>2)return ['Likely','warn'];return ['Uncertain — add cleaner samples','bad']}
+function renderSlots(){let root=document.getElementById('slots');root.innerHTML='';slots.forEach((name,i)=>{let avg=aggregate(samples[i]),r=avg?rank(avg):null,c=r?certainty(r):['Not sampled',''];let div=document.createElement('div');div.className='slot'+(i===active?' active':'');div.onclick=()=>{active=i;renderSlots();draw()};div.innerHTML=`<div class="slothead"><h3>${name}</h3><span class="meta">${samples[i].length} point${samples[i].length===1?'':'s'}</span></div><div class="result"><div class="sample" style="background:${avg?rgbHex(avg):'#333'}"></div><div>${r?`<strong>${r[0].name}</strong><span class="meta">sample ${rgbHex(avg)} • ΔE ${r[0].d.toFixed(1)}<br>next: ${r[1].name} (${r[1].d.toFixed(1)})</span><div class="confidence ${c[1]}">${c[0]}</div>`:'<span class="meta">Select this slot, then tap the screenshot.</span>'}</div></div>`;root.appendChild(div)});}
+function draw(){if(!image)return;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);samples.forEach((arr,si)=>arr.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,8,0,Math.PI*2);ctx.lineWidth=3;ctx.strokeStyle=si===active?'#58d6c7':'#fff';ctx.stroke();ctx.fillStyle=rgbHex(p.rgb);ctx.fill()}));}
+function sampleAt(x,y){let rad=+document.getElementById('radius').value,data=ctx.getImageData(Math.max(0,x-rad),Math.max(0,y-rad),Math.min(canvas.width,x+rad)-Math.max(0,x-rad),Math.min(canvas.height,y+rad)-Math.max(0,y-rad)).data,px=[];for(let i=0;i<data.length;i+=4){if(data[i+3]>240)px.push([data[i],data[i+1],data[i+2]])}if(!px.length)return;let center=[median(px.map(p=>p[0])),median(px.map(p=>p[1])),median(px.map(p=>p[2]))];let filtered=px.filter(p=>Math.hypot(...p.map((v,j)=>v-center[j]))<55);let rgb=[0,1,2].map(j=>median((filtered.length?filtered:px).map(p=>p[j])));samples[active].push({x,y,rgb});renderSlots();draw()}
+canvas.addEventListener('click',e=>{if(!image)return;let r=canvas.getBoundingClientRect();sampleAt(Math.round((e.clientX-r.left)*canvas.width/r.width),Math.round((e.clientY-r.top)*canvas.height/r.height))});
+document.getElementById('file').onchange=e=>{let f=e.target.files[0];if(!f)return;let u=URL.createObjectURL(f),im=new Image();im.onload=()=>{image=im;let max=1500,s=Math.min(1,max/im.width);canvas.width=Math.round(im.width*s);canvas.height=Math.round(im.height*s);empty.style.display='none';samples.forEach(a=>a.length=0);draw();renderSlots();URL.revokeObjectURL(u)};im.src=u};
+document.getElementById('undo').onclick=()=>{samples[active].pop();renderSlots();draw()};document.getElementById('clear').onclick=()=>{samples[active]=[];renderSlots();draw()};document.getElementById('reset').onclick=()=>{samples.forEach(a=>a.length=0);renderSlots();draw()};
+document.getElementById('radius').oninput=e=>document.getElementById('radiusValue').textContent=e.target.value+' px';
+document.getElementById('copy').onclick=async()=>{let text=slots.map((n,i)=>{let a=aggregate(samples[i]);return `${n}: ${a?rank(a)[0].name:'not sampled'}`}).join('\n');try{await navigator.clipboard.writeText(text);document.getElementById('copy').textContent='Copied!';setTimeout(()=>document.getElementById('copy').textContent='Copy results',1200)}catch{alert(text)}};
+document.getElementById('palette').innerHTML=colours.map(c=>`<div class="chip"><span class="swatch" style="background:${c[1]}"></span><span>${c[0]}<br><small>${c[1]}</small></span></div>`).join('');renderSlots();
+</script></body></html>
