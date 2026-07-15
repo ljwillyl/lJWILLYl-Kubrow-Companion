@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>EE.log Decoder | lJWILLYl Kubrow Companion</title>
+  <link rel="stylesheet" href="eelog.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="eyebrow">WillyGuru v9 test</div>
+      <h1>EE.log Decoder</h1>
+      <p>Decode the currently equipped Kubrow’s internal colour identifiers locally. Your EE.log never leaves your device.</p>
+    <nav class="companionNav">
+      <a href="index.html">Colour Scanner</a>
+      <a class="current" href="eelog.html">EE.log Decoder</a>
+      <a href="kennel.html">My Kennel</a>
+    </nav>
+    </header>
+
+    <section class="card">
+      <h2>Find your EE.log</h2>
+      <p id="deviceIntro" class="muted">Windows Chrome or Edge users can connect the file once, then refresh it later with one click.</p>
+
+      <div class="buttonStack">
+        <button id="connectLog" class="primary">Connect EE.log</button>
+        <button id="refreshLog" class="secondary" hidden>Refresh connected EE.log</button>
+        <button id="forgetLog" class="ghost" hidden>Forget connected file</button>
+      </div>
+      <input id="logFile" type="file" accept=".log,.txt,text/plain" hidden>
+
+      <div id="pickerHelp" class="help" hidden>
+        <strong>Path copied:</strong>
+        <code>%LocalAppData%\Warframe</code>
+        <ol>
+          <li>Tap the address bar in the file picker.</li>
+          <li>Paste the copied path and press Enter.</li>
+          <li>Select <strong>EE.log</strong>.</li>
+        </ol>
+      </div>
+
+      <details>
+        <summary>Android / Warframe Mobile instructions</summary>
+        <p>Use your Files app to select or share EE.log. If Android blocks the game folder, first copy EE.log into Downloads, then choose it here.</p>
+      </details>
+    </section>
+
+    <section id="statusCard" class="card" hidden>
+      <h2 id="statusTitle">Reading log…</h2>
+      <p id="statusText" class="muted"></p>
+    </section>
+
+    <section id="resultCard" class="card" hidden>
+      <div class="resultHead">
+        <div>
+          <div class="eyebrow">Latest complete Kubrow block</div>
+          <h2>EE.log confirmed colours</h2>
+        </div>
+        <span class="verified">Verified from log</span>
+      </div>
+
+      <div id="results" class="results"></div>
+
+      <details class="evidence">
+        <summary>Show raw EE.log evidence</summary>
+        <pre id="rawEvidence"></pre>
+      </details>
+
+      <p class="notice">
+        Primary, Secondary and Tertiary are inherited fur colours. The final fur entry is shown separately as Accent/custom colour.
+      </p>
+    </section>
+
+    <section id="alternativesCard" class="card" hidden>
+      <h2>Other possible blocks</h2>
+      <p class="muted">Use these only if the latest result is not the Kubrow you just equipped.</p>
+      <div id="alternatives"></div>
+    </section>
+
+    <footer>lJWILLYl Kubrow Companion · Local EE.log processing</footer>
+  <section id="kennelSaveCard" class="card" hidden>
+      <h2>Save this result to My Kennel</h2>
+      <p id="kennelAuthText" class="muted">Sign in to save this verified result privately.</p>
+      <div id="kennelLogin">
+        <div class="saveGrid">
+          <label>Email<input id="kennelEmail" type="email"></label>
+          <label>Password<input id="kennelPassword" type="password"></label>
+        </div>
+        <button id="kennelSignIn" class="secondary">Sign in</button>
+        <a class="kennelLink" href="kennel.html">Create/manage breeder account</a>
+      </div>
+      <div id="kennelSaveForm" hidden>
+        <div class="saveGrid">
+          <label>Kubrow name *<input id="saveKubrowName"></label>
+          <label>Breed<input id="saveBreed"></label>
+          <label>Fur pattern<input id="savePattern"></label>
+        </div>
+        <button id="saveEelogKennel" class="primary">Save EE.log result to My Kennel</button>
+        <p id="kennelSaveMessage" class="muted"></p>
+      </div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="eelog.js"></script>
+</body>
+</html>
