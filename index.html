@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>Palette Scanner | lJWILLYl Kubrow Companion</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head><body><main class="shell">
+<header class="appHeader"><a class="appBrand" href="index.html"><span class="brandMark">W</span><span><strong>lJWILLYl</strong><small>Kubrow Companion</small></span></a><nav><a class="active" href="index.html">Palette Scanner</a><a href="kennel.html">My Kennel</a></nav></header>
+<section class="hero"><div class="eyebrow">Exact in-game palette scan</div><h1>One screenshot. Three exact colours.</h1><p>Prepare the Base, Secondary and Tertiary boxes in Warframe, take one screenshot, then upload it. No fur sampling.</p></section>
+<section class="card"><h2>Prepare the colour boxes</h2><ol>
+<li>Drag the greyed-out <b>Base Color</b> box into <b>Secondary Color</b>, then drag the now-paletted Secondary box back into Base.</li>
+<li>Drag <b>Secondary Color</b> into <b>Tertiary Color</b>, then drag it back into Secondary.</li>
+<li>Drag <b>Tertiary Color</b> into <b>Emissive</b>, then drag it back into Tertiary.</li>
+<li>Keep the Kubrow name, fur-pattern row and all three colour boxes visible, then take a full screenshot.</li></ol>
+<div class="notice">Do not crop the screenshot before uploading.</div></section>
+<section class="card">
+      <input id="file" class="nativeFileInput" type="file" accept="image/png,image/jpeg,image/webp">
+      <label id="upload" class="primary uploadLabel" for="file">Upload Appearance screenshot</label>
+      <p class="uploadHelp">Tap the button, then select the full Warframe Appearance screenshot.</p>
+      <p id="scanStatus" class="muted">No screenshot loaded.</p>
+    </section>
+<section id="workspace" class="card" hidden><div class="head"><div><div class="eyebrow">Automatic detection</div><h2>Place the three samplers</h2></div><button id="rerun" class="secondary">Reset sampler positions</button></div><p class="muted">Drag sampler 1 into Base Color, sampler 2 into Secondary Color and sampler 3 into Tertiary Color. Put each crosshair entirely inside the flat coloured rectangle—not on its border, shuffle icon or reset icon.</p>
+<div class="samplerControls">
+  <label class="sliderLabel" for="sampleSize">
+    Sampling area
+    <span><strong id="sampleSizeValue">3</strong> px radius</span>
+  </label>
+  <input id="sampleSize" type="range" min="1" max="10" value="3" step="1">
+  <div class="samplerButtons">
+    <button id="smallestSample" class="ghost" type="button">Use smallest area</button>
+    <button id="resetMarkers" class="secondary" type="button">Reset sampler positions</button>
+  </div>
+</div>
+<div id="imageWrap" class="imageWrap"><canvas id="canvas"></canvas><button class="marker" id="marker0" data-i="0">1</button><button class="marker" id="marker1" data-i="1">2</button><button class="marker" id="marker2" data-i="2">3</button></div></section>
+<section id="resultCard" class="card" hidden><div class="eyebrow">Exact palette match</div><h2>Detected colours</h2><div id="results" class="results"></div><div id="warning" class="notice" hidden></div></section>
+<section id="detailsCard" class="card" hidden><div class="head"><div><div class="eyebrow">Review before saving</div><h2>Kubrow details</h2></div><span id="ocrBadge" class="badge">Reading text…</span></div>
+<div class="grid three">
+<label>Kubrow name *<input id="kubrowName"></label>
+<label>Breed * <small class="fieldHint">Not shown on this screen—select it manually.</small><select id="breed"><option value="">Choose breed…</option><option>Chesa</option><option>Huras</option><option>Raksa</option><option>Sahasa</option><option>Sunika</option><option>Helminth Charger</option></select></label>
+<label>Fur pattern *<input id="pattern" placeholder="OCR reads this from the Fur Pattern row"></label>
+<label>Build type<select id="buildType"><option value="">Unknown</option><option>Bulky</option><option>Athletic</option><option>Skinny</option></select></label>
+<label>Gender<select id="gender"><option value="">Unknown</option><option>Male</option><option>Female</option></select></label>
+<label>Eye colour<select id="eyes"><option value="">Unknown</option><option>Green</option><option>Light gold</option><option>Pink</option><option>Purple</option><option>Blue</option><option>Orange / Red</option><option>Lilac</option><option>Black</option><option>Gold</option></select></label>
+<label>Imprints remaining<select id="imprints"><option value="">Unknown</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></label>
+<label>Trade status<select id="tradeStatus"><option value="private">Private</option><option value="not_for_sale">Not for sale</option><option value="open_to_offers">Open to offers</option><option value="for_sale">For sale</option></select></label>
+<label>Asking price<input id="askingPrice" type="number" min="0"></label>
+</div>
+<label class="confirmDetails">
+  <input id="detailsConfirmed" type="checkbox">
+  <span>I have checked that the Kubrow name, breed and fur pattern are correct.</span>
+</label>
+<label>Private notes<textarea id="notes" rows="3"></textarea></label>
+<div class="auth"><div id="signedOut"><h3>Sign in to save to My Kennel</h3><div class="grid two"><label>Email<input id="email" type="email"></label><label>Password<input id="password" type="password"></label></div><div class="actions"><button id="signIn" class="secondary">Sign in</button><a href="kennel.html">Create/manage account</a></div></div>
+<div id="signedIn" hidden><div class="head"><p>Signed in as <b id="accountEmail"></b></p><button id="signOut" class="ghost">Sign out</button></div><button id="saveKennel" class="primary">Save screenshot and result to My Kennel</button></div><p id="saveStatus" class="muted"></p></div></section>
+<footer>lJWILLYl Kubrow Companion · Processed locally until you choose Save to My Kennel.</footer>
+</main><script src="app.js?v=native-upload-4"></script></body></html>
