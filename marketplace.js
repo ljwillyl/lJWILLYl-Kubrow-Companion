@@ -1,13 +1,11 @@
 'use strict';
 
 (() => {
-  const SUPABASE_URL = 'https://mxboguiriifkmsmcusjt.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14Ym9ndWlyaWlma21zbWN1c2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwNDE5NzMsImV4cCI6MjA5OTYxNzk3M30.QAG5eGfOfZkSoL_mB55AVEgoQn4ZHAaQavD4yVt0zAM';
-  const BUCKET = 'kennel-screenshots';
+  const BUCKET = window.KUBROW_CONFIG.storageBucket;
   const ACTIVE_STATUSES = ['for_sale', 'open_to_offers', 'reserved'];
 
   const $ = (id) => document.getElementById(id);
-  const client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const client = window.KubrowApp?.getSupabaseClient();
   let records = [];
   let signedImages = {};
 

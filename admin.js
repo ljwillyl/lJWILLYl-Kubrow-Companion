@@ -1,21 +1,18 @@
 "use strict";
 
-const SUPABASE_URL = "https://mxboguiriifkmsmcusjt.supabase.co";
-const SUPABASE_KEY = "sb_publishable_gZwUnRiKV2Ww2wqAXs9mBA_Z8lFw0LV";
-
 document.addEventListener("DOMContentLoaded", async () => {
   const $ = (id) => document.getElementById(id);
   const loginForm = $("loginForm");
   const loginButton = $("signIn");
   const loginMessage = $("loginMessage");
 
-  if (!window.supabase) {
+  if (!window.KubrowApp) {
     loginMessage.textContent =
       "Supabase failed to load. Refresh the page or disable any script blocker.";
     return;
   }
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = window.KubrowApp.getSupabaseClient();
   let session = null;
   let rows = [];
   let profiles = [];
@@ -134,7 +131,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await Promise.all(
       rows.filter((row) => row.screenshot_path).map(async (row) => {
         const { data } = await sb.storage
-          .from("kennel-screenshots")
+          .from(window.KUBROW_CONFIG.storageBucket)
           .createSignedUrl(row.screenshot_path, 1800);
         images[row.id] = data?.signedUrl || "";
       })
@@ -313,7 +310,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (row?.screenshot_path) {
-      await sb.storage.from("kennel-screenshots").remove([row.screenshot_path]);
+      await sb.storage.from(window.KUBROW_CONFIG.storageBucket).remove([row.screenshot_path]);
     }
 
     $("editor").close();

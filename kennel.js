@@ -1,8 +1,6 @@
 
 'use strict';
-const SUPABASE_URL='https://mxboguiriifkmsmcusjt.supabase.co';
-const SUPABASE_KEY='sb_publishable_gZwUnRiKV2Ww2wqAXs9mBA_Z8lFw0LV';
-const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const client=window.KubrowApp.getSupabaseClient();
 let session=null,records=[],signedImages={};
 const dnaUrl=r=>`dna.html?id=${encodeURIComponent(r.kdna_id||r.id)}`;
 
@@ -67,7 +65,7 @@ async function loadKennel(){
   records=data||[];
   signedImages={};
   await Promise.all(records.filter(r=>r.screenshot_path).map(async r=>{
-    const {data:shot}=await client.storage.from('kennel-screenshots').createSignedUrl(r.screenshot_path,3600);
+    const {data:shot}=await client.storage.from(window.KUBROW_CONFIG.storageBucket).createSignedUrl(r.screenshot_path,3600);
     if(shot?.signedUrl)signedImages[r.id]=shot.signedUrl;
   }));
   renderList();
@@ -130,7 +128,7 @@ async function deleteRecord(id,name){
     .eq('id',id)
     .eq('owner_id',session.user.id);
   if(error)return alert(error.message);
-  if(record?.screenshot_path)await client.storage.from('kennel-screenshots').remove([record.screenshot_path]);
+  if(record?.screenshot_path)await client.storage.from(window.KUBROW_CONFIG.storageBucket).remove([record.screenshot_path]);
   await loadKennel();
 }
 

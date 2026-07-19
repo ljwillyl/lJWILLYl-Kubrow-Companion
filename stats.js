@@ -1,8 +1,6 @@
 "use strict";
 
-const SUPABASE_URL = "https://mxboguiriifkmsmcusjt.supabase.co";
-const SUPABASE_KEY = "sb_publishable_gZwUnRiKV2Ww2wqAXs9mBA_Z8lFw0LV";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.KubrowApp.getSupabaseClient();
 const $ = (id) => document.getElementById(id);
 
 let rows = [];
