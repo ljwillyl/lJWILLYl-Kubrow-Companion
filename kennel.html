@@ -6,7 +6,8 @@
   <meta name="theme-color" content="#07111f">
   <title>My Kennel | Kubrow Companion</title>
   <link rel="stylesheet" href="kennel.css?v=6-2-3">
-  <link rel="stylesheet" href="kennel-showcase.css?v=6-2-3">
+  <link rel="stylesheet" href="kennel-showcase.css?v=6-2-4">
+  <link rel="stylesheet" href="kubrow-engine.css?v=0-1-0">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=6-2-3"></script>
 <link rel="stylesheet" href="mobile-ui.css?v=6-2-3"><link rel="stylesheet" href="design-system.css?v=6-2-3">
 </head>
@@ -116,6 +117,18 @@
         <label>Imprints remaining<select id="imprints"><option value="">Unknown</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></label>
         <label>Verification<select id="verification"><option value="manual">Manual entry</option><option value="screenshot">Appearance screenshot verified</option></select></label>
       </div>
+      <section id="enginePreview" class="enginePreview" aria-live="polite">
+        <div class="enginePreviewHead">
+          <div><div class="eyebrow">Experimental compatibility layer</div><h3 id="enginePreviewTitle">Needs breed and build</h3><p id="enginePreviewSubtitle" class="muted">The engine only analyses this form. It does not change or save any values.</p></div>
+          <span id="enginePreviewBadge" class="engineBadge">Read only</span>
+        </div>
+        <div class="engineFacts">
+          <div class="engineFact"><small>Classification</small><strong id="engineClassification">Unresolved</strong></div>
+          <div class="engineFact"><small>Pattern behaviour</small><strong id="enginePattern">Unchanged</strong></div>
+          <div class="engineFact"><small>Fourth palette</small><strong id="enginePalette">Unknown</strong></div>
+        </div>
+        <p id="engineWarning" class="engineNotice">Choose a recognised breed and build to preview the proposed classification.</p>
+      </section>
       <div class="grid three colours">
         <label>Primary<input id="primaryColour"></label>
         <label>Secondary<input id="secondaryColour"></label>
@@ -163,7 +176,8 @@
 </div>
 
 <script src="companion-types.js?v=6-2-3"></script>
-<script src="kennel.js?v=6-2-3"></script>
+<script src="kubrow-engine.js?v=0-1-0"></script>
+<script src="kennel.js?v=6-2-4"></script>
 <script src="mobile-ui.js?v=6-2-3"></script><script src="ui-shell.js?v=6-2-3"></script>
 </body>
 </html>

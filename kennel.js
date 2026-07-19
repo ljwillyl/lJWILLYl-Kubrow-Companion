@@ -7,6 +7,45 @@ const dnaUrl=r=>`dna.html?id=${encodeURIComponent(r.kdna_id||r.id)}`;
 const $=id=>document.getElementById(id);
 const msg=(id,text,type='')=>{$(id).textContent=text;$(id).className='message '+type};
 
+
+function prettyEngineValue(value){
+  return String(value||'unknown').replaceAll('-',' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+function currentEngineInput(){
+  return {
+    breed:$('breed')?.value||'',
+    build_type:$('buildType')?.value||'',
+    body_form:$('buildType')?.value||'',
+    companion_type:$('companionType')?.value||'kubrow',
+    pattern:$('pattern')?.value||''
+  };
+}
+function renderEnginePreview(){
+  const host=$('enginePreview');
+  if(!host)return;
+  if(!window.KubrowEngine?.enabled?.()){
+    host.classList.add('engineOff');
+    $('enginePreviewTitle').textContent='Compatibility engine disabled';
+    $('engineClassification').textContent='No analysis';
+    $('enginePattern').textContent='Current workflow';
+    $('enginePalette').textContent='Current workflow';
+    $('engineWarning').textContent='Saved records and all existing features continue normally.';
+    return;
+  }
+  host.classList.remove('engineOff');
+  const result=window.KubrowEngine.analyse(currentEngineInput());
+  $('enginePreviewTitle').textContent=result.label;
+  $('enginePreviewBadge').textContent=`Engine ${result.engineVersion} · read only`;
+  $('engineClassification').textContent=prettyEngineValue(result.classification);
+  $('enginePattern').textContent=prettyEngineValue(result.patternMode);
+  $('enginePalette').textContent=prettyEngineValue(result.additionalColourPalette);
+  $('engineWarning').textContent=result.warnings[0]||'High-confidence standard Kubrow classification. No form values are changed.';
+}
+['breed','buildType','companionType','pattern'].forEach(id=>{
+  const field=$(id);
+  if(field)field.addEventListener('change',renderEnginePreview);
+});
+
 $('signIn').onclick=async()=>{
   msg('authMessage','Signing in…');
   const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
@@ -106,7 +145,7 @@ $('saveKubrow').onclick=async()=>{
 $('clearForm').onclick=clearForm;
 function clearForm(){
   ['recordId','kubrowName','breed','pattern','buildNotes','primaryColour','secondaryColour','tertiaryColour','eyeColour','accentColour','askingPrice','notes'].forEach(id=>$(id).value='');
-  $('companionType').value='kubrow';$('channel4Role').value='eye';$('gender').value='';$('buildType').value='';$('imprints').value='';$('verification').value='manual';$('tradeStatus').value='private';$('isPublic').checked=false;$('formTitle').textContent='New kennel record';const summary=$('formSummaryTitle');if(summary)summary.textContent='Manual kennel record';
+  $('companionType').value='kubrow';$('channel4Role').value='eye';$('gender').value='';$('buildType').value='';$('imprints').value='';$('verification').value='manual';$('tradeStatus').value='private';$('isPublic').checked=false;$('formTitle').textContent='New kennel record';const summary=$('formSummaryTitle');if(summary)summary.textContent='Manual kennel record';renderEnginePreview();
 }
 
 function editRecord(id){
@@ -114,7 +153,7 @@ function editRecord(id){
   $('recordId').value=r.id;$('kubrowName').value=r.name||'';$('companionType').value=r.companion_type||'kubrow';$('breed').value=r.breed||'';$('pattern').value=r.pattern||'';
   $('gender').value=r.gender||'';$('buildType').value=r.build_type||'';$('buildNotes').value=r.build_notes||'';$('primaryColour').value=r.primary_colour||'';
   $('secondaryColour').value=r.secondary_colour||'';$('tertiaryColour').value=r.tertiary_colour||'';$('eyeColour').value=r.eye_colour||'';
-  $('accentColour').value=r.accent_colour||'';$('channel4Role').value=r.channel4_role||'eye';window.updateCompanionFields?.();$('verification').value=r.verification_source||'manual';
+  $('accentColour').value=r.accent_colour||'';$('channel4Role').value=r.channel4_role||'eye';window.updateCompanionFields?.();renderEnginePreview();$('verification').value=r.verification_source||'manual';
   $('imprints').value=r.imprints_remaining??'';$('tradeStatus').value=r.trade_status||'private';$('askingPrice').value=r.asking_price??'';
   $('notes').value=r.notes||'';$('isPublic').checked=!!r.is_public;$('formTitle').textContent='Edit '+r.name;const summary=$('formSummaryTitle');if(summary)summary.textContent='Edit '+r.name;const editor=document.querySelector('.recordEditor');if(editor)editor.open=true;
   window.scrollTo({top:editor?.offsetTop||$('app').offsetTop+100,behavior:'smooth'});
@@ -185,11 +224,13 @@ function renderList(){
   $('kennelList').innerHTML=shown.map(r=>{
     const traits=[r.companion_type&&r.companion_type!=='kubrow'?r.companion_type.replaceAll('_',' '):null,r.breed,r.pattern,r.build_type].filter(Boolean).join(' · ')||'Traits not recorded';
     const listed=isListed(r);
+    const engineResult=window.KubrowEngine?.enabled?.()?window.KubrowEngine.analyse(r):null;
+    const enginePill=engineResult&&engineResult.classification!=='unresolved'?`<span class="classificationPill ${engineResult.evidence?.confidence==='provisional'?'provisional':''}" title="Read-only Kubrow Engine ${esc(engineResult.engineVersion)}">${esc(engineResult.label)}</span>`:'';
     const swatches=[['Primary',r.primary_colour],['Secondary',r.secondary_colour],['Tertiary',r.tertiary_colour]].map(([label,value])=>`<div class="colourSwatch"><span class="swatchDot" style="--swatch:${colourToCss(value)}"></span><div><small>${label}</small><strong>${esc(value||'Unknown')}</strong></div></div>`).join('');
     return `<article class="kubrow kubrowWithImage">
       <div class="kubrowMedia">${signedImages[r.id]?`<img class="kennelShot" src="${signedImages[r.id]}" alt="Appearance screenshot for ${esc(r.name)}">`:`<div class="shotPlaceholder">No appearance screenshot saved</div>`}<span class="listingRibbon ${listed?'live':''}">${listed?'Marketplace live':'Private collection'}</span></div>
       <div class="kubrowCardBody">
-        <div class="kubrowCardTop"><div class="kubrowTitle"><h3>${esc(r.name)}</h3><a class="kdnaPill" href="${dnaUrl(r)}">${esc(r.kdna_id||'DNA pending')}</a><div class="kubrowTraits">${esc(traits)}</div></div>
+        <div class="kubrowCardTop"><div class="kubrowTitle"><h3>${esc(r.name)}</h3><a class="kdnaPill" href="${dnaUrl(r)}">${esc(r.kdna_id||'DNA pending')}</a><div class="kubrowTraits">${esc(traits)}</div>${enginePill}</div>
         <div class="tags compactTags"><span class="tag ${r.verification_source==='screenshot'?'paletteBadge':''}">${r.verification_source==='screenshot'?'VERIFIED':'MANUAL'}</span><span class="tag review-${esc(r.review_status||'pending')}">${r.is_public?esc(r.review_status||'pending'):'PRIVATE'}</span></div></div>
         <div class="colourSwatches">${swatches}</div>
         <div class="kubrowFacts"><div class="kubrowFact"><small>Gender</small><strong>${esc(r.gender||'Unknown')}</strong></div><div class="kubrowFact"><small>Imprints</small><strong>${r.imprints_remaining??'Unknown'}</strong></div><div class="kubrowFact"><small>Status</small><strong>${esc((r.trade_status||'private').replaceAll('_',' '))}</strong></div></div>
@@ -223,3 +264,5 @@ lJWILLYl Kubrow Companion`;
   if(navigator.share){navigator.share({title:r.name,text}).catch(()=>{});}
   else navigator.clipboard.writeText(text).then(()=>alert('Kubrow card copied to clipboard.'));
 }
+
+renderEnginePreview();
