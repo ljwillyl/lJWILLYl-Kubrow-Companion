@@ -132,6 +132,41 @@ async function deleteRecord(id,name){
   await loadKennel();
 }
 
+
+const ACTIVE_LISTINGS=['for_sale','open_to_offers','reserved'];
+function isListed(record){return !!record?.is_public&&ACTIVE_LISTINGS.includes(record?.trade_status)}
+function openSellModal(id){
+  const r=records.find(x=>String(x.id)===String(id));if(!r)return;
+  $('sellRecordId').value=r.id;
+  $('sellModalTitle').textContent=isListed(r)?'Edit '+r.name+' listing':'Sell '+r.name;
+  $('sellKubrowSummary').innerHTML=`<strong>${esc(r.name)}</strong><span>${esc([r.breed,r.pattern,r.build_type].filter(Boolean).join(' · ')||'Traits not recorded')}</span>`;
+  $('sellTradeStatus').value=ACTIVE_LISTINGS.includes(r.trade_status)?r.trade_status:'for_sale';
+  $('sellAskingPrice').value=r.asking_price??'';
+  $('sellListingNotes').value=r.listing_notes||'';
+  $('publishListing').textContent=isListed(r)?'Save listing':'Publish listing';
+  $('removeListing').hidden=!isListed(r);
+  msg('sellMessage','');
+  $('sellModal').hidden=false;document.body.classList.add('modalOpen');
+}
+function closeSellModal(){$('sellModal').hidden=true;document.body.classList.remove('modalOpen')}
+document.querySelectorAll('[data-close-sell]').forEach(el=>el.addEventListener('click',closeSellModal));
+$('publishListing').onclick=async()=>{
+  const id=$('sellRecordId').value,status=$('sellTradeStatus').value;
+  const price=$('sellAskingPrice').value===''?null:Number($('sellAskingPrice').value);
+  if(status==='for_sale'&&price===null)return msg('sellMessage','Enter a price or choose Open to offers.','error');
+  msg('sellMessage','Publishing listing…');
+  const {error}=await client.from('kennel_kubrows').update({is_public:true,trade_status:status,asking_price:price,listing_notes:$('sellListingNotes').value.trim()||null}).eq('id',id).eq('owner_id',session.user.id);
+  if(error)return msg('sellMessage',error.message,'error');
+  msg('sellMessage','Listing published.','good');await loadKennel();setTimeout(closeSellModal,500);
+};
+$('removeListing').onclick=async()=>{
+  const id=$('sellRecordId').value;if(!confirm('Remove this Kubrow from the Marketplace?'))return;
+  msg('sellMessage','Removing listing…');
+  const {error}=await client.from('kennel_kubrows').update({trade_status:'not_for_sale',asking_price:null,listing_notes:null}).eq('id',id).eq('owner_id',session.user.id);
+  if(error)return msg('sellMessage',error.message,'error');
+  await loadKennel();closeSellModal();
+};
+
 $('search').oninput=renderList;['filterBuild','filterTrade','filterVerified'].forEach(id=>{const el=$(id);if(el)el.onchange=renderList;});
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function renderList(){
@@ -146,9 +181,10 @@ function renderList(){
         <div class="tags"><span class="tag ${r.verification_source==='screenshot'?'paletteBadge':''}">${r.verification_source==='screenshot'?'PALETTE VERIFIED':'MANUAL'}</span><span class="tag">${esc((r.trade_status||'private').replaceAll('_',' '))}</span><span class="tag review-${esc(r.review_status||'pending')}">${r.is_public?esc(r.review_status||'pending'):'PRIVATE DNA'}</span></div></div>
         <div class="colourGrid"><div class="colour"><small>Primary</small>${esc(r.primary_colour||'Unknown')}</div><div class="colour"><small>Secondary</small>${esc(r.secondary_colour||'Unknown')}</div><div class="colour"><small>Tertiary</small>${esc(r.tertiary_colour||'Unknown')}</div></div>
         <div class="meta">${esc(r.channel4_role==='energy'?'Energy':r.channel4_role==='accent'?'Fourth channel':'Eyes')}: ${esc(r.channel4_role==='accent'?(r.accent_colour||'Unknown'):(r.eye_colour||'Unknown'))} · Gender: ${esc(r.gender||'Unknown')} · Imprints: ${r.imprints_remaining??'Unknown'}</div>
-        <div class="kubrowActions"><a class="secondary buttonLink" href="${dnaUrl(r)}">View DNA</a><button class="secondary" data-edit="${r.id}">Edit details</button><button class="secondary" data-share="${r.id}">Share card</button><button class="danger" data-delete="${r.id}" data-name="${esc(r.name)}">Delete</button></div>
+        <div class="kubrowActions"><a class="secondary buttonLink" href="${dnaUrl(r)}">View DNA</a><button class="primary" data-sell="${r.id}">${isListed(r)?'Edit listing':'Sell Kubrow'}</button><button class="secondary" data-edit="${r.id}">Edit details</button><button class="secondary" data-share="${r.id}">Share card</button><button class="danger" data-delete="${r.id}" data-name="${esc(r.name)}">Delete</button></div>
       </div>
     </article>`).join('');
+  document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>openSellModal(b.dataset.sell));
   document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editRecord(b.dataset.edit));
   document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.delete,b.dataset.name));
   document.querySelectorAll('[data-share]').forEach(b=>b.onclick=()=>shareRecord(b.dataset.share));

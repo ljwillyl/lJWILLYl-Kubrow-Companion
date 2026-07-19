@@ -8,6 +8,8 @@
   const client = window.KubrowApp?.getSupabaseClient();
   let records = [];
   let signedImages = {};
+  let marketSession = null;
+  let ownKennel = [];
 
   const esc = (value) => String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -139,6 +141,7 @@
             ${colourCell('Secondary', record.secondary_colour)}
             ${colourCell('Tertiary', record.tertiary_colour)}
           </div>
+          ${record.listing_notes ? `<p class="marketListingNotes">${esc(record.listing_notes)}</p>` : ''}
           <div class="marketMeta">
             <span>${record.verification_source === 'screenshot' ? '✓ Palette Verified' : 'Manual record'}</span>
             <span>${record.imprints_remaining ?? 'Unknown'} imprints</span>
@@ -195,6 +198,51 @@
       $('retryMarketplace')?.addEventListener('click', loadMarketplace);
     }
   }
+
+
+  const listingActive=(r)=>ACTIVE_STATUSES.includes(r?.trade_status);
+  function setSellMessage(text,type=''){const el=$('marketSellMessage');el.textContent=text;el.className=`message ${type}`.trim()}
+  function closeMarketSell(){$('marketSellModal').hidden=true;document.body.classList.remove('modalOpen')}
+  async function openMarketSell(){
+    $('marketSellModal').hidden=false;document.body.classList.add('modalOpen');setSellMessage('');
+    const {data}=await client.auth.getSession();marketSession=data.session;
+    $('marketAuthView').hidden=!!marketSession;$('marketPickerView').hidden=!marketSession;
+    if(marketSession)await loadOwnKennel();
+  }
+  async function loadOwnKennel(){
+    setSellMessage('Loading your kennel…');
+    const {data,error}=await client.from('kennel_kubrows').select('*').eq('owner_id',marketSession.user.id).order('name');
+    if(error)return setSellMessage(error.message,'bad');
+    ownKennel=data||[];
+    if(!ownKennel.length){$('marketPickerView').hidden=true;return setSellMessage('Your kennel is empty. Add a Kubrow in My Kennel first.','warn')}
+    $('marketKubrowPicker').innerHTML=ownKennel.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}${listingActive(r)?' — listed':''}</option>`).join('');
+    $('marketPickerView').hidden=false;updateMarketPicker();setSellMessage('');
+  }
+  function updateMarketPicker(){
+    const r=ownKennel.find(x=>String(x.id)===String($('marketKubrowPicker').value));if(!r)return;
+    $('marketSelectedSummary').innerHTML=`<strong>${esc(r.name)}</strong><span>${esc([r.breed,r.pattern,r.build_type].filter(Boolean).join(' · ')||'Traits not recorded')}</span>`;
+    $('marketTradeStatus').value=listingActive(r)?r.trade_status:'for_sale';$('marketAskingPrice').value=r.asking_price??'';$('marketListingNotes').value=r.listing_notes||'';
+    $('marketPublishListing').textContent=listingActive(r)?'Save listing':'Publish listing';$('marketRemoveListing').hidden=!listingActive(r);
+  }
+  $('sellKubrowButton')?.addEventListener('click',openMarketSell);
+  document.querySelectorAll('[data-market-close]').forEach(el=>el.addEventListener('click',closeMarketSell));
+  $('marketKubrowPicker')?.addEventListener('change',updateMarketPicker);
+  $('marketSignIn')?.addEventListener('click',async()=>{
+    setSellMessage('Signing in…');const {data,error}=await client.auth.signInWithPassword({email:$('marketEmail').value.trim(),password:$('marketPassword').value});
+    if(error)return setSellMessage(error.message,'bad');marketSession=data.session;$('marketAuthView').hidden=true;await loadOwnKennel();
+  });
+  $('marketPublishListing')?.addEventListener('click',async()=>{
+    const id=$('marketKubrowPicker').value,status=$('marketTradeStatus').value,price=$('marketAskingPrice').value===''?null:Number($('marketAskingPrice').value);
+    if(status==='for_sale'&&price===null)return setSellMessage('Enter a price or choose Open to offers.','bad');
+    setSellMessage('Publishing listing…');
+    const {error}=await client.from('kennel_kubrows').update({is_public:true,trade_status:status,asking_price:price,listing_notes:$('marketListingNotes').value.trim()||null}).eq('id',id).eq('owner_id',marketSession.user.id);
+    if(error)return setSellMessage(error.message,'bad');setSellMessage('Listing published.','good');await Promise.all([loadOwnKennel(),loadMarketplace()]);
+  });
+  $('marketRemoveListing')?.addEventListener('click',async()=>{
+    const id=$('marketKubrowPicker').value;if(!confirm('Remove this Kubrow from the Marketplace?'))return;
+    const {error}=await client.from('kennel_kubrows').update({trade_status:'not_for_sale',asking_price:null,listing_notes:null}).eq('id',id).eq('owner_id',marketSession.user.id);
+    if(error)return setSellMessage(error.message,'bad');setSellMessage('Listing removed.','good');await Promise.all([loadOwnKennel(),loadMarketplace()]);
+  });
 
   ['search', 'status', 'build', 'sort'].forEach((id) => {
     $(id)?.addEventListener(id === 'search' ? 'input' : 'change', render);

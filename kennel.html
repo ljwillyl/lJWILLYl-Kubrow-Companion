@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07111f">
   <title>My Kennel | lJWILLYl Kubrow Companion</title>
-  <link rel="stylesheet" href="kennel.css?v=version-3-2">
+  <link rel="stylesheet" href="kennel.css?v=5-1-0">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=5-0-1"></script>
 <link rel="stylesheet" href="mobile-ui.css?v=version-3-3"></head>
 <body>
@@ -122,7 +122,33 @@
     </section>
   </section>
 </main>
+<div id="sellModal" class="tradeModal" hidden>
+  <div class="tradeModalBackdrop" data-close-sell></div>
+  <section class="tradeDialog" role="dialog" aria-modal="true" aria-labelledby="sellModalTitle">
+    <div class="row between wrap">
+      <div><div class="eyebrow">Marketplace listing</div><h2 id="sellModalTitle">Sell Kubrow</h2></div>
+      <button type="button" class="ghost tradeClose" data-close-sell aria-label="Close">×</button>
+    </div>
+    <input id="sellRecordId" type="hidden">
+    <div id="sellKubrowSummary" class="sellSummary"></div>
+    <div class="grid two">
+      <label>Listing type
+        <select id="sellTradeStatus"><option value="for_sale">For sale</option><option value="open_to_offers">Open to offers</option><option value="reserved">Reserved</option></select>
+      </label>
+      <label>Price (Platinum)<input id="sellAskingPrice" type="number" min="0" inputmode="numeric" placeholder="Leave blank for offers"></label>
+    </div>
+    <label>Public listing notes<textarea id="sellListingNotes" rows="3" maxlength="500" placeholder="Example: Two imprints remaining, message me in game"></textarea></label>
+    <p class="muted">Publishing makes this Kubrow eligible to appear publicly. New public DNA records may still require administrator approval.</p>
+    <div class="tradeModalActions">
+      <button id="publishListing" type="button" class="primary">Publish listing</button>
+      <button id="removeListing" type="button" class="danger" hidden>Remove listing</button>
+      <button type="button" class="ghost" data-close-sell>Cancel</button>
+    </div>
+    <p id="sellMessage" class="message"></p>
+  </section>
+</div>
+
 <script src="companion-types.js?v=version-3-3"></script>
-<script src="kennel.js?v=5-0-1"></script>
+<script src="kennel.js?v=5-1-0"></script>
 <script src="mobile-ui.js?v=version-3-3"></script></body>
 </html>
