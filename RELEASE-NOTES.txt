@@ -1,0 +1,18 @@
+Kubrow Companion v6.2.3 — My Kennel Showcase
+
+REPLACE:
+- kennel.html
+- kennel.js
+
+ADD:
+- kennel-showcase.css
+
+SQL:
+- None
+
+Unchanged:
+- Supabase configuration
+- Authentication
+- Scanner save workflow
+- Marketplace listing workflow
+- DNA records and storage

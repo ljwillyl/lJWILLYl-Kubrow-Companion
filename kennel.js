@@ -106,7 +106,7 @@ $('saveKubrow').onclick=async()=>{
 $('clearForm').onclick=clearForm;
 function clearForm(){
   ['recordId','kubrowName','breed','pattern','buildNotes','primaryColour','secondaryColour','tertiaryColour','eyeColour','accentColour','askingPrice','notes'].forEach(id=>$(id).value='');
-  $('companionType').value='kubrow';$('channel4Role').value='eye';$('gender').value='';$('buildType').value='';$('imprints').value='';$('verification').value='manual';$('tradeStatus').value='private';$('isPublic').checked=false;$('formTitle').textContent='New kennel record';
+  $('companionType').value='kubrow';$('channel4Role').value='eye';$('gender').value='';$('buildType').value='';$('imprints').value='';$('verification').value='manual';$('tradeStatus').value='private';$('isPublic').checked=false;$('formTitle').textContent='New kennel record';const summary=$('formSummaryTitle');if(summary)summary.textContent='Manual kennel record';
 }
 
 function editRecord(id){
@@ -116,8 +116,8 @@ function editRecord(id){
   $('secondaryColour').value=r.secondary_colour||'';$('tertiaryColour').value=r.tertiary_colour||'';$('eyeColour').value=r.eye_colour||'';
   $('accentColour').value=r.accent_colour||'';$('channel4Role').value=r.channel4_role||'eye';window.updateCompanionFields?.();$('verification').value=r.verification_source||'manual';
   $('imprints').value=r.imprints_remaining??'';$('tradeStatus').value=r.trade_status||'private';$('askingPrice').value=r.asking_price??'';
-  $('notes').value=r.notes||'';$('isPublic').checked=!!r.is_public;$('formTitle').textContent='Edit '+r.name;
-  window.scrollTo({top:$('app').offsetTop+100,behavior:'smooth'});
+  $('notes').value=r.notes||'';$('isPublic').checked=!!r.is_public;$('formTitle').textContent='Edit '+r.name;const summary=$('formSummaryTitle');if(summary)summary.textContent='Edit '+r.name;const editor=document.querySelector('.recordEditor');if(editor)editor.open=true;
+  window.scrollTo({top:editor?.offsetTop||$('app').offsetTop+100,behavior:'smooth'});
 }
 async function deleteRecord(id,name){
   if(!confirm('Delete '+name+' from your kennel?'))return;
@@ -167,32 +167,46 @@ $('removeListing').onclick=async()=>{
   await loadKennel();closeSellModal();
 };
 
+const filterToggle=$('toggleKennelFilters');
+if(filterToggle){filterToggle.onclick=()=>{const panel=$('kennelFilters'),open=panel.hidden;panel.hidden=!open;filterToggle.setAttribute('aria-expanded',String(open));filterToggle.textContent=open?'Filters −':'Filters +';};}
 $('search').oninput=renderList;['filterBuild','filterTrade','filterVerified'].forEach(id=>{const el=$(id);if(el)el.onchange=renderList;});
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function colourToCss(name){
+  const value=String(name||'').trim().toLowerCase();
+  const known={black:'#17191d',white:'#e8edf1',grey:'#7c8791',gray:'#7c8791',red:'#9f3340',orange:'#b9652d',yellow:'#c6a53a',gold:'#b88a37',brown:'#72503a',tan:'#a57d58',beige:'#bda886',green:'#4f805e',emerald:'#237867',blue:'#416f9e',navy:'#263f68',purple:'#72558c',pink:'#a75d7f'};
+  for(const [key,colour] of Object.entries(known))if(value.includes(key))return colour;
+  let hash=0;for(const char of value)hash=((hash<<5)-hash)+char.charCodeAt(0);
+  return `hsl(${Math.abs(hash)%360} 32% 48%)`;
+}
 function renderList(){
   const q=$('search').value.trim().toLowerCase(),build=$('filterBuild')?.value||'',trade=$('filterTrade')?.value||'',verified=$('filterVerified')?.checked;
   const shown=records.filter(r=>(!q||[r.name,r.breed,r.pattern,r.primary_colour,r.secondary_colour,r.tertiary_colour].some(v=>(v||'').toLowerCase().includes(q)))&&(!build||r.build_type===build)&&(!trade||r.trade_status===trade)&&(!verified||r.verification_source==='screenshot'));
   $('emptyKennel').hidden=shown.length>0;
-  $('kennelList').innerHTML=shown.map(r=>`
-    <article class="kubrow kubrowWithImage">
-      <div>${signedImages[r.id]?`<img class="kennelShot" src="${signedImages[r.id]}" alt="Appearance screenshot for ${esc(r.name)}">`:`<div class="shotPlaceholder">No Appearance screenshot saved</div>`}</div>
-      <div>
-        <div class="row between wrap"><div><h3>${esc(r.name)}</h3><a class="kdnaPill" href="${dnaUrl(r)}">${esc(r.kdna_id||'DNA pending')}</a><div class="meta">${esc([r.companion_type&&r.companion_type!=='kubrow'?r.companion_type.replaceAll('_',' '):null,r.breed,r.pattern,r.build_type].filter(Boolean).join(' · ')||'Breed/pattern/build not recorded')}</div></div>
-        <div class="tags"><span class="tag ${r.verification_source==='screenshot'?'paletteBadge':''}">${r.verification_source==='screenshot'?'PALETTE VERIFIED':'MANUAL'}</span><span class="tag">${esc((r.trade_status||'private').replaceAll('_',' '))}</span><span class="tag review-${esc(r.review_status||'pending')}">${r.is_public?esc(r.review_status||'pending'):'PRIVATE DNA'}</span></div></div>
-        <div class="colourGrid"><div class="colour"><small>Primary</small>${esc(r.primary_colour||'Unknown')}</div><div class="colour"><small>Secondary</small>${esc(r.secondary_colour||'Unknown')}</div><div class="colour"><small>Tertiary</small>${esc(r.tertiary_colour||'Unknown')}</div></div>
-        <div class="meta">${esc(r.channel4_role==='energy'?'Energy':r.channel4_role==='accent'?'Fourth channel':'Eyes')}: ${esc(r.channel4_role==='accent'?(r.accent_colour||'Unknown'):(r.eye_colour||'Unknown'))} · Gender: ${esc(r.gender||'Unknown')} · Imprints: ${r.imprints_remaining??'Unknown'}</div>
-        <div class="kubrowActions"><a class="secondary buttonLink" href="${dnaUrl(r)}">View DNA</a><button class="primary" data-sell="${r.id}">${isListed(r)?'Edit listing':'Sell Kubrow'}</button><button class="secondary" data-edit="${r.id}">Edit details</button><button class="secondary" data-share="${r.id}">Share card</button><button class="danger" data-delete="${r.id}" data-name="${esc(r.name)}">Delete</button></div>
+  $('kennelList').innerHTML=shown.map(r=>{
+    const traits=[r.companion_type&&r.companion_type!=='kubrow'?r.companion_type.replaceAll('_',' '):null,r.breed,r.pattern,r.build_type].filter(Boolean).join(' · ')||'Traits not recorded';
+    const listed=isListed(r);
+    const swatches=[['Primary',r.primary_colour],['Secondary',r.secondary_colour],['Tertiary',r.tertiary_colour]].map(([label,value])=>`<div class="colourSwatch"><span class="swatchDot" style="--swatch:${colourToCss(value)}"></span><div><small>${label}</small><strong>${esc(value||'Unknown')}</strong></div></div>`).join('');
+    return `<article class="kubrow kubrowWithImage">
+      <div class="kubrowMedia">${signedImages[r.id]?`<img class="kennelShot" src="${signedImages[r.id]}" alt="Appearance screenshot for ${esc(r.name)}">`:`<div class="shotPlaceholder">No appearance screenshot saved</div>`}<span class="listingRibbon ${listed?'live':''}">${listed?'Marketplace live':'Private collection'}</span></div>
+      <div class="kubrowCardBody">
+        <div class="kubrowCardTop"><div class="kubrowTitle"><h3>${esc(r.name)}</h3><a class="kdnaPill" href="${dnaUrl(r)}">${esc(r.kdna_id||'DNA pending')}</a><div class="kubrowTraits">${esc(traits)}</div></div>
+        <div class="tags compactTags"><span class="tag ${r.verification_source==='screenshot'?'paletteBadge':''}">${r.verification_source==='screenshot'?'VERIFIED':'MANUAL'}</span><span class="tag review-${esc(r.review_status||'pending')}">${r.is_public?esc(r.review_status||'pending'):'PRIVATE'}</span></div></div>
+        <div class="colourSwatches">${swatches}</div>
+        <div class="kubrowFacts"><div class="kubrowFact"><small>Gender</small><strong>${esc(r.gender||'Unknown')}</strong></div><div class="kubrowFact"><small>Imprints</small><strong>${r.imprints_remaining??'Unknown'}</strong></div><div class="kubrowFact"><small>Status</small><strong>${esc((r.trade_status||'private').replaceAll('_',' '))}</strong></div></div>
+        <div class="kubrowActions"><a class="secondary buttonLink" href="${dnaUrl(r)}">View DNA</a><button class="primary" data-sell="${r.id}">${listed?'Edit listing':'Sell Kubrow'}</button><button class="secondary" data-edit="${r.id}">Edit details</button><button class="secondary" data-share="${r.id}">Share card</button><button class="danger" data-delete="${r.id}" data-name="${esc(r.name)}">Delete Kubrow</button></div>
       </div>
-    </article>`).join('');
+    </article>`;
+  }).join('');
   document.querySelectorAll('[data-sell]').forEach(b=>b.onclick=()=>openSellModal(b.dataset.sell));
   document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editRecord(b.dataset.edit));
   document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteRecord(b.dataset.delete,b.dataset.name));
   document.querySelectorAll('[data-share]').forEach(b=>b.onclick=()=>shareRecord(b.dataset.share));
   $('totalCount').textContent=records.length;
   $('verifiedCount').textContent=records.filter(r=>r.verification_source==='screenshot').length;
-  $('saleCount').textContent=records.filter(r=>['for_sale','open_to_offers'].includes(r.trade_status)).length;
+  $('lotusCount').textContent=records.filter(r=>(r.pattern||'').toLowerCase()==='lotus').length;
+  $('bulkyCount').textContent=records.filter(r=>(r.build_type||'').toLowerCase()==='bulky').length;
+  $('saleCount').textContent=records.filter(isListed).length;
 }
-
 function shareRecord(id){
   const r=records.find(x=>String(x.id)===String(id));if(!r)return;
   const text=`${r.name}

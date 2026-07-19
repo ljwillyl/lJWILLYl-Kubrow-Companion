@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07111f">
-  <title>My Kennel | lJWILLYl Kubrow Companion</title>
-  <link rel="stylesheet" href="kennel.css?v=6-2-0">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=6-2-0"></script>
-<link rel="stylesheet" href="mobile-ui.css?v=6-2-0"><link rel="stylesheet" href="design-system.css?v=6-2-0">
+  <title>My Kennel | Kubrow Companion</title>
+  <link rel="stylesheet" href="kennel.css?v=6-2-3">
+  <link rel="stylesheet" href="kennel-showcase.css?v=6-2-3">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=6-2-3"></script>
+<link rel="stylesheet" href="mobile-ui.css?v=6-2-3"><link rel="stylesheet" href="design-system.css?v=6-2-3">
 </head>
 <body>
 <main class="shell">
@@ -61,13 +62,38 @@
   </section>
 
   <section id="app" hidden>
-    <section class="stats">
-      <div class="stat"><strong id="totalCount">0</strong><span>Total Kubrows</span></div>
-      <div class="stat"><strong id="verifiedCount">0</strong><span>Palette verified</span></div>
-      <div class="stat"><strong id="saleCount">0</strong><span>For sale/offers</span></div>
+    <section class="kennelDashboard" aria-label="Kennel overview">
+      <div class="kennelDashboardIntro"><span class="eyebrow">Your collection</span><h2>Breeder dashboard</h2><p>Every companion, colour and listing in one place.</p></div>
+      <div class="collectionStats">
+        <div class="collectionStat"><strong id="totalCount">0</strong><span>Total</span></div>
+        <div class="collectionStat"><strong id="verifiedCount">0</strong><span>Verified</span></div>
+        <div class="collectionStat"><strong id="lotusCount">0</strong><span>Lotus</span></div>
+        <div class="collectionStat"><strong id="bulkyCount">0</strong><span>Bulky</span></div>
+        <div class="collectionStat"><strong id="saleCount">0</strong><span>Listed</span></div>
+      </div>
     </section>
 
-    <section class="card">
+    <section class="card collectionPanel">
+      <div class="collectionHeader">
+        <div><div class="eyebrow">Private collection</div><h2>Your Kubrows</h2><p class="muted">Browse, manage and list your companions.</p></div>
+        <a class="primary buttonLink scanCta" href="scanner.html">+ Scan a Kubrow</a>
+      </div>
+      <div class="collectionToolbar">
+        <label class="collectionSearch"><span>Search kennel</span><input id="search" class="search" placeholder="Name, breed, pattern or colour"></label>
+        <button id="toggleKennelFilters" class="ghost filterToggle" type="button" aria-expanded="false">Filters +</button>
+      </div>
+      <div id="kennelFilters" class="filterRow kennelFilters" hidden>
+        <select id="filterBuild" aria-label="Filter by build"><option value="">All builds</option><option>Bulky</option><option>Athletic</option><option>Skinny</option></select>
+        <select id="filterTrade" aria-label="Filter by trade status"><option value="">All trade statuses</option><option value="for_sale">For sale</option><option value="open_to_offers">Open to offers</option><option value="not_for_sale">Not for sale</option><option value="private">Private</option></select>
+        <label class="check"><input id="filterVerified" type="checkbox"> Palette verified only</label>
+      </div>
+      <div id="kennelList" class="kennelList"></div>
+      <div id="emptyKennel" class="kennelEmpty"><div class="emptyGlyph">🐺</div><h3>Your kennel is waiting</h3><p>No Kubrows match this view yet.</p><a class="primary buttonLink" href="scanner.html">Scan your first Kubrow</a></div>
+    </section>
+
+    <details class="card recordEditor">
+      <summary><span><span class="eyebrow">Manage a Kubrow</span><strong id="formSummaryTitle">Manual kennel record</strong></span><span class="summaryAction">Open editor</span></summary>
+      <div class="recordEditorBody">
       <div class="row between wrap">
         <div><div class="eyebrow">Manage a Kubrow</div><h2 id="formTitle">Manual kennel record</h2><p class="muted">For a verified entry, use the Palette Scanner and save directly to My Kennel.</p></div>
         <button id="clearForm" class="ghost">Clear form</button>
@@ -106,21 +132,8 @@
       <div class="publishHint">Public records remain private until approved by an administrator. Editing an approved public record returns it to Pending review.</div>
       <button id="saveKubrow" class="primary">Save manual kennel record</button>
       <p id="saveMessage" class="message"></p>
-    </section>
-
-    <section class="card">
-      <div class="row between wrap">
-        <div><div class="eyebrow">Private collection</div><h2>Your Kubrows</h2></div>
-        <input id="search" class="search" placeholder="Search name, breed, pattern or colour">
-<div class="filterRow">
-<select id="filterBuild"><option value="">All builds</option><option>Bulky</option><option>Athletic</option><option>Skinny</option></select>
-<select id="filterTrade"><option value="">All trade statuses</option><option value="for_sale">For sale</option><option value="open_to_offers">Open to offers</option><option value="not_for_sale">Not for sale</option><option value="private">Private</option></select>
-<label class="check"><input id="filterVerified" type="checkbox"> Palette verified only</label>
-</div>
       </div>
-      <div id="kennelList" class="kennelList"></div>
-      <p id="emptyKennel" class="muted">No Kubrows saved yet.</p>
-    </section>
+    </details>
   </section>
 </main>
 <div id="sellModal" class="tradeModal" hidden>
@@ -149,8 +162,8 @@
   </section>
 </div>
 
-<script src="companion-types.js?v=6-2-0"></script>
-<script src="kennel.js?v=6-2-0"></script>
-<script src="mobile-ui.js?v=6-2-0"></script><script src="ui-shell.js?v=6-2-0"></script>
+<script src="companion-types.js?v=6-2-3"></script>
+<script src="kennel.js?v=6-2-3"></script>
+<script src="mobile-ui.js?v=6-2-3"></script><script src="ui-shell.js?v=6-2-3"></script>
 </body>
 </html>
