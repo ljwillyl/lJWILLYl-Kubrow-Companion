@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>Scanner | lJWILLYl Kubrow Companion</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<link rel="stylesheet" href="mobile-ui.css?v=version-3-3">
+<link rel="stylesheet" href="screenshot-validator.css?v=4-0-1"></head>
+<body>
+<main class="shell">
+<header class="appHeader">
+  <a class="appBrand" href="index.html"><span class="brandMark">W</span><span><strong>lJWILLYl</strong><small>Kubrow Companion</small></span></a>
+  <nav><a class="current" href="index.html">Scanner</a><a href="kennel.html">My Kennel</a><a href="dna.html">DNA Explorer</a><a href="marketplace.html">Marketplace</a><a href="genetics.html">Genetics</a><a href="stats.html">Statistics</a><a href="admin.html">Admin</a></nav>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">Kubrow genetics toolkit</div>
+  <h1>Scan exact palettes or estimate from fur.</h1>
+  <p>Use Exact Palette Scan whenever the Appearance boxes are prepared. Advanced Fur Estimate remains available for ordinary Kubrow screenshots.</p>
+</section>
+
+<nav class="modeTabs">
+  <button class="modeTab active" data-mode="palette">Exact Palette Scan</button>
+  <button class="modeTab" data-mode="fur">Advanced Fur Estimate</button>
+</nav>
+
+<section id="paletteMode" class="modePanel active">
+  <section class="wizardShell">
+    <div class="wizardTop">
+      <div>
+        <div class="eyebrow">Exact Palette Scan</div>
+        <h2 id="wizardTitle">Prepare and upload</h2>
+      </div>
+      <div class="wizardCount"><span id="wizardCurrent">1</span> / 6</div>
+    </div>
+    <div class="wizardProgress" aria-label="Scanner progress">
+      <button class="wizardDot active" data-wizard-step="1"><span>1</span><small>Upload</small></button>
+      <button class="wizardDot" data-wizard-step="2"><span>2</span><small>Sample</small></button>
+      <button class="wizardDot" data-wizard-step="3"><span>3</span><small>Colours</small></button>
+      <button class="wizardDot" data-wizard-step="4"><span>4</span><small>Details</small></button>
+      <button class="wizardDot" data-wizard-step="5"><span>5</span><small>Account</small></button>
+      <button class="wizardDot" data-wizard-step="6"><span>6</span><small>Save</small></button>
+    </div>
+
+    <section class="wizardPane active" data-pane="1">
+      <section class="card wizardCard">
+        <h2>Prepare the colour boxes</h2>
+        <ol>
+          <li>Click and drag the white-and-greyed-out <b>Primary / Base Color</b> box into <b>Secondary</b>.</li>
+          <li>Take the <b>Secondary</b> box and drag it back into <b>Primary / Base Color</b>.</li>
+          <li>Click and drag the white-and-greyed-out <b>Tertiary</b> box into <b>Emissive</b>.</li>
+          <li>Take the <b>Emissive</b> box and drag it back into <b>Tertiary</b>.</li>
+          <li>Take a full, uncropped Appearance screenshot with the name, Fur Pattern row and complete interface visible.</li>
+        </ol>
+        <div class="notice">Palette scans are saved as <b>Palette Verified</b>. The scanner will check image quality and crop risk automatically before allowing you to continue.</div>
+        <input id="paletteFile" class="nativeFileInput" type="file" accept="image/png,image/jpeg,image/webp">
+        <label class="primary uploadLabel" for="paletteFile">Upload Appearance screenshot</label>
+        <p id="paletteStatus" class="muted">No screenshot loaded.</p>
+        <section id="screenshotValidation" class="validatorPanel" hidden aria-live="polite">
+          <div class="validatorHeader"><div><div class="eyebrow">Automatic checks</div><h3 id="validatorTitle">Analysing screenshot…</h3></div><span id="validatorBadge" class="validatorBadge">WAIT</span></div>
+          <div class="validatorScore"><div><b>Screenshot quality</b><strong id="validatorScore">0 / 100</strong></div><div class="validatorBar"><span id="validatorBar"></span></div></div>
+          <div id="validatorChecks" class="validatorChecks"></div>
+          <p id="validatorMessage" class="validatorMessage"></p>
+        </section>
+      </section>
+    </section>
+
+    <section class="wizardPane" data-pane="2">
+      <section id="paletteWorkspace" class="card" hidden>
+        <div class="head"><div><div class="eyebrow">Precise placement</div><h2>Place and lock each sampler</h2></div><button id="resetPaletteMarkers" class="secondary">Reset positions</button></div>
+        <p class="muted">Move each crosshair fully inside the tiny flat rectangle. Use the magnifier and lock each sampler when it is clean.</p>
+        <div class="samplerControls">
+          <label class="sliderLabel">Sampling area <span><strong id="sampleSizeValue">2</strong> px radius</span></label>
+          <input id="sampleSize" type="range" min="1" max="10" value="2">
+          <div class="samplerButtons"><button id="smallestSample" class="ghost">Use 1-pixel sample</button><button id="rememberLayout" class="secondary">Remember this layout</button></div>
+        </div>
+        <div class="placementSteps"><button class="step active" data-focus="0">1 · Base</button><button class="step" data-focus="1">2 · Secondary</button><button class="step" data-focus="2">3 · Tertiary</button></div>
+        <div class="imageStage">
+          <div id="paletteImageWrap" class="imageWrap"><canvas id="paletteCanvas"></canvas><button class="marker" id="paletteMarker0" data-i="0"></button><button class="marker" id="paletteMarker1" data-i="1"></button><button class="marker" id="paletteMarker2" data-i="2"></button></div>
+          <aside class="magnifierCard"><canvas id="magnifier" width="180" height="180"></canvas><div id="magnifierLabel">Move a sampler</div><div id="liveConfidence" class="liveConfidence">Waiting for sample</div><button id="lockSampler" class="secondary">Lock current sampler</button></aside>
+        </div>
+      </section>
+    </section>
+
+    <section class="wizardPane" data-pane="3">
+      <section id="paletteResultsCard" class="card" hidden><div class="eyebrow">Review colours</div><h2>Detected palette</h2><div id="paletteResults" class="results"></div><div id="overallConfidence" class="overallConfidence"></div><div id="paletteWarning" class="notice" hidden></div></section>
+    </section>
+
+    <section class="wizardPane" data-pane="4">
+      <section id="detailsCard" class="card" hidden>
+        <div class="head"><div><div class="eyebrow">Kubrow record</div><h2>Check the details</h2></div><span id="ocrBadge" class="badge">Reading text…</span></div>
+        <div class="grid three">
+          <label>Kubrow name *<input id="kubrowName"></label>
+          <label>Companion type *<select id="companionType" data-companion-controller data-prefix=""><option value="kubrow">Kubrow</option><option value="helminth_charger">Helminth Charger</option><option value="hybrid">Hybrid / glitched companion</option></select></label>
+          <label>Breed *<select id="breed"><option value="">Choose breed…</option><option>Chesa</option><option>Huras</option><option>Raksa</option><option>Sahasa</option><option>Sunika</option><option>Helminth Charger</option><option>Hybrid / Glitched</option></select></label>
+          <label>Fur / skin pattern *<select id="pattern"><option value="">Choose pattern…</option><option>Domino</option><option>Hound</option><option>Lotus</option><option>Merle</option><option>Patchy</option><option>Striped</option><option>Helminth</option><option>Other / Unknown</option></select></label>
+          <label>Body / build<select id="buildType"><option value="">Unknown</option><option>Bulky</option><option>Athletic</option><option>Skinny</option><option>Helminth</option><option>Hybrid: Kubrow body</option><option>Hybrid: Charger body</option></select></label>
+          <label>Gender<select id="gender"><option value="">Unknown</option><option>Male</option><option>Female</option></select></label>
+          <label data-eye-label="main">Eye colour <select id="eyes"><option value="">Unknown</option><option>Green</option><option>Light gold</option><option>Pink</option><option>Purple</option><option>Blue</option><option>Orange / Red</option><option>Lilac</option><option>Black</option><option>Gold</option><option>Custom palette colour</option></select></label>
+          <label>Fourth channel role<select id="channel4Role"><option value="eye">Eye / inherited energy</option></select></label>
+          <label data-accent-wrap="main" hidden>Accent / fourth colour<input id="accentColour" placeholder="Official palette name"></label>
+          <label>Imprints remaining<select id="imprints"><option value="">Unknown</option><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></label>
+          <label>Trade status<select id="tradeStatus"><option value="private">Private</option><option value="not_for_sale">Not for sale</option><option value="open_to_offers">Open to offers</option><option value="for_sale">For sale</option></select></label>
+          <label>Asking price<input id="askingPrice" type="number" min="0"></label>
+        </div>
+        <p class="notice" data-hybrid-help="main" hidden><b>Hybrid record:</b> choose the visible body and identify whether the fourth channel acts as eye, accent, energy, or a shared channel. Hybrid behaviour can vary, so this records the observed appearance without forcing an assumption.</p>
+        <label class="confirmDetails"><input id="detailsConfirmed" type="checkbox"><span>I checked the name, breed, pattern and three detected colours.</span></label>
+        <label>Private notes<textarea id="notes" rows="3"></textarea></label>
+      </section>
+    </section>
+
+    <section class="wizardPane" data-pane="5">
+      <section class="card"><div id="signedOut"><h2>Sign in to My Kennel</h2><p class="muted">Your scan is saved locally while you sign in.</p><div class="grid two"><label>Email<input id="email" type="email"></label><label>Password<input id="password" type="password"></label></div><div class="actions"><button id="signIn" class="secondary">Sign in</button><a href="kennel.html">Create/manage account</a></div></div><div id="signedIn" hidden><div class="successPanel"><strong>Signed in</strong><span id="accountEmail"></span></div><button id="signOut" class="ghost">Sign out</button></div><p id="saveStatus" class="muted"></p></section>
+    </section>
+
+    <section class="wizardPane" data-pane="6">
+      <section class="card"><div class="eyebrow">Final review</div><h2>Ready for My Kennel</h2><div id="finalReview" class="finalReview"></div><button id="saveKennel" class="primary">Save Palette Verified Kubrow</button><p id="finalSaveStatus" class="muted"></p></section>
+    </section>
+
+    <div class="wizardNav"><button id="wizardBack" class="ghost" disabled>Back</button><button id="wizardNext" class="primary compactPrimary">Next</button></div>
+  </section>
+</section>
+
+<section id="furMode" class="modePanel">
+  <section class="card">
+    <h2>Advanced Fur Estimate</h2>
+    <p class="muted">Use a normal Nexus-pattern screenshot. Sample several clean fur points for each inherited colour. This is an estimate and does not receive Palette Verified status.</p>
+    <input id="furFile" class="nativeFileInput" type="file" accept="image/*">
+    <label class="primary uploadLabel" for="furFile">Upload normal Kubrow screenshot</label>
+    <p id="furStatus" class="muted">No screenshot loaded.</p>
+  </section>
+  <section id="furWorkspace" class="card" hidden>
+    <div class="furToolbar">
+      <button class="furSlot active" data-slot="0">Primary</button>
+      <button class="furSlot" data-slot="1">Secondary</button>
+      <button class="furSlot" data-slot="2">Tertiary</button>
+      <button id="furUndo" class="ghost">Undo</button>
+      <button id="furClear" class="ghost">Clear slot</button>
+    </div>
+    <div class="imageWrap"><canvas id="furCanvas"></canvas></div>
+    <div id="furResults" class="results"></div>
+    <div class="notice">Fur estimates should be confirmed later with an Appearance palette screenshot before being treated as exact.</div>
+  </section>
+</section>
+
+<footer>lJWILLYl Kubrow Companion</footer>
+</main>
+<script src="companion-types.js?v=version-3-3"></script>
+<script src="screenshot-validator.js?v=4-0-1"></script>
+<script src="app.js?v=4-0-1"></script>
+<script src="mobile-ui.js?v=version-3-3"></script></body></html>
