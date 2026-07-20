@@ -1,0 +1,13 @@
+Kubrow Companion v6.2.5 — KCGE Core v1.0
+
+REPLACE:
+- kubrow-engine.js
+
+ADD:
+- kcge-diagnostics.html
+- KCGE-SPECIFICATION.md
+- TESTING-KCGE-1.0.md
+
+SQL: None
+
+This release formalises the four-branch Kubrow/Helminth classification engine while preserving the read-only v6.2.4 compatibility layer.

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KCGE Diagnostics | Kubrow Companion</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#07111f;color:#eef6ff}body{margin:0;padding:24px}.wrap{max-width:900px;margin:auto}.card{background:#0f1b2d;border:1px solid #263950;border-radius:18px;padding:22px;margin:16px 0}h1,h2{margin:.2em 0}.muted{color:#9eb0c5}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}label{display:grid;gap:7px;font-weight:700}select,button{font:inherit;color:inherit;background:#111f33;border:1px solid #344c68;border-radius:10px;padding:12px}button{cursor:pointer;background:#1b6ce0}.result{display:grid;gap:9px}.row{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #20344c;padding:9px 0}.badge{display:inline-flex;padding:6px 10px;border-radius:999px;background:#16375f;font-weight:800}.ok{color:#8ef0b0}.warn{color:#ffd27a}@media(max-width:650px){.grid{grid-template-columns:1fr}.row{display:grid;gap:3px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="muted">Kubrow Companion Genetics Engine</div>
+<h1>KCGE v1.0 Diagnostics</h1>
+<p class="muted">This standalone page tests the engine only. It does not connect to Supabase or alter kennel records.</p>
+<section class="card grid">
+<label>Breed
+<select id="breed">
+<option>Huras</option><option>Chesa</option><option>Raksa</option><option>Sahasa</option><option>Sunika</option><option>Helminth Charger</option>
+</select></label>
+<label>Build
+<select id="build"><option>Athletic</option><option>Skinny</option><option>Bulky</option><option>Infested</option></select>
+</label>
+<button id="run" type="button">Run KCGE analysis</button>
+</section>
+<section class="card result" id="output"></section>
+<section class="card"><h2>Four-branch test</h2><div id="matrix"></div></section>
+</main>
+<script src="kubrow-engine.js?v=1-0-0"></script>
+<script>
+const $=id=>document.getElementById(id);
+function row(name,value){return `<div class="row"><span class="muted">${name}</span><b>${value??'—'}</b></div>`}
+function run(){const result=KubrowEngine.analyse({breed:$('breed').value,build_type:$('build').value});$('output').innerHTML=`<span class="badge">${result.ruleId}</span><h2>${result.label}</h2>${row('Classification',result.classification)}${row('Body family',result.bodyFamily)}${row('Pattern',result.pattern?.locked?'Locked to Helminth':'Kubrow pattern selectable')}${row('Fur slots',result.colours?.furSlots)}${row('Fourth slot',result.colours?.additionalSlot?.visible?`${result.colours.additionalSlot.role} · ${result.colours.additionalSlot.palette} palette`:'Not used')}${row('Evidence',`${result.evidence.level} · ${result.evidence.confidence}`)}${row('Engine',result.engineVersion)}`}
+$('run').onclick=run;run();
+const cases=[['Huras','Bulky','KCGE-001'],['Huras','Infested','KCGE-002'],['Helminth Charger','Infested','KCGE-003'],['Helminth Charger','Athletic','KCGE-004']];
+$('matrix').innerHTML=cases.map(([breed,build,expected])=>{const r=KubrowEngine.analyse({breed,build_type:build});const pass=r.ruleId===expected;return row(`${breed} + ${build}`,`<span class="${pass?'ok':'warn'}">${r.ruleId} ${pass?'✓':'✗'}</span>`) }).join('');
+</script>
+</body>
+</html>
